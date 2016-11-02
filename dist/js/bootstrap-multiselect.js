@@ -348,7 +348,7 @@
              * @param {jQuery} event
              */
             onDropdownShown: function(event) {
-
+                this.adjustPosition();
             },
             /**
              * Triggered after the dropdown is hidden.
@@ -429,7 +429,8 @@
                 filterClearBtn: '<span class="input-group-btn"><button class="btn btn-default multiselect-clear-filter" type="button"><i class="glyphicon glyphicon-remove-circle"></i></button></span>',
                 li: '<li><a tabindex="0"><label></label></a></li>',
                 divider: '<li class="multiselect-item divider"></li>',
-                liGroup: '<li class="multiselect-item multiselect-group"><label></label></li>'
+                liGroup: '<li class="multiselect-item multiselect-group"><label></label></li>',
+                actionPanel: '<p class="multiselect-actionPanel"><a href="#" title="None" class="multiselect-clearSelection">None</a></p>'
             }
         },
 
@@ -498,7 +499,7 @@
             // Set max height of dropdown menu to activate auto scrollbar.
             if (this.options.maxHeight) {
                 // TODO: Add a class for this option to move the css declarations.
-                this.$ul.css({
+                this.$ul.find('ul').css({
                     'max-height': this.options.maxHeight + 'px',
                     'overflow-y': 'auto',
                     'overflow-x': 'hidden'
@@ -507,15 +508,24 @@
 
             if (this.options.dropUp) {
 
-                var height = Math.min(this.options.maxHeight, $('option[data-role!="divider"]', this.$select).length*26 + $('option[data-role="divider"]', this.$select).length*19 + (this.options.includeSelectAllOption ? 26 : 0) + (this.options.enableFiltering || this.options.enableCaseInsensitiveFiltering ? 44 : 0));
+                var height = Math.min(
+                    this.options.maxHeight,
+                    $('option[data-role!="divider"]', this.$select).length * 26 + $('option[data-role="divider"]', this.$select).length * 19 + (this.options.includeSelectAllOption ? 26 : 0) + (this.options.enableFiltering || this.options.enableCaseInsensitiveFiltering ? 44 : 0));
                 var moveCalc = height + 34;
 
                 this.$ul.css({
-                    'max-height': height + 'px',
-                    'overflow-y': 'auto',
-                    'overflow-x': 'hidden',
                     'margin-top': "-" + moveCalc + 'px'
                 });
+
+                this.$ul.find('ul').css({
+                    'max-height': height + 'px',
+                    'overflow-y': 'auto',
+                    'overflow-x': 'hidden'
+                });
+            }
+
+            if (this.options.enableActionPanel) {
+                this.$ul.append($(this.options.templates.actionPanel));
             }
 
             this.$container.append(this.$ul);
@@ -882,7 +892,7 @@
 
             $label.attr('title', $element.attr('title'));
 
-            this.$ul.append($li);
+            this.$ul.find('ul').append($li);
 
             if ($element.is(':disabled')) {
                 $checkbox.attr('disabled', 'disabled')
@@ -908,7 +918,7 @@
          */
         createDivider: function(element) {
             var $divider = $(this.options.templates.divider);
-            this.$ul.append($divider);
+            this.$ul.find('ul').append($divider);
         },
 
         /**
@@ -943,7 +953,7 @@
                 $li.addClass('disabled');
             }
 
-            this.$ul.append($li);
+            this.$ul.find('ul').append($li);
 
             $("option", group).each($.proxy(function($, group) {
                 this.createOptionValue(group);
@@ -967,7 +977,7 @@
 
                 // Check whether to add a divider after the select all.
                 if (this.options.includeSelectAllDivider) {
-                    this.$ul.prepend($(this.options.templates.divider));
+                    this.$ul.find('ul').prepend($(this.options.templates.divider));
                 }
 
                 var $li = $(this.options.templates.li);
@@ -994,7 +1004,7 @@
                 $checkbox.parent().parent()
                     .addClass('multiselect-all');
 
-                this.$ul.prepend($li);
+                this.$ul.find('ul').prepend($li);
 
                 $checkbox.prop('checked', false);
             }
@@ -1122,6 +1132,8 @@
                             }
 
                             this.options.onFiltering(event.target);
+
+                            this.adjustPosition();
 
                         }, this), 300, this);
                     }, this));
@@ -1682,6 +1694,15 @@
         setAllSelectedText: function(allSelectedText) {
             this.options.allSelectedText = allSelectedText;
             this.updateButtonText();
+        },
+
+        adjustPosition: function() {
+            if (this.options.dropUp) {
+                var pointerIndent = 4;
+                this.$ul.css({
+                    'margin-top': -(this.$ul.outerHeight() + pointerIndent) + 'px'
+                });
+            }
         }
     };
 
